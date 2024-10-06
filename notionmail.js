@@ -12,7 +12,6 @@ const rl = readline.createInterface({
   prompt: "$ ",
 });
 
-let users = {}; // store {user: [messages]}
 let mode = "menu"; // of three possibilites (menu, sending, reading)
 let sender = ""; // in send mode: sender
 let recipient = ""; // in send mode: recipient
@@ -148,14 +147,7 @@ function processInput(value) {
 
     case "send_message":
       message = value;
-      if (!users[recipient]) {
-        // put message in recipient's inbox
-        users[recipient] = [];
-      }
-      users[recipient].push({ from: sender, message });
-
       createNotionPage(sender, recipient, message); // also save it on notion db
-
       display(`Message sent from ${sender} to ${recipient}!\n`);
       resetMenu();
       break;
