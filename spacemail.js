@@ -197,6 +197,11 @@ async function markAllMessagesAsDeleted() {
 }
 
 function processInput(value) {
+  if (value === "exit") {
+    display("Powering down Space Mail... Goodbye!");
+    rl.close(); // close rl interface
+    return;
+  }
   switch (mode) {
     case "menu": // need to prompt user for inputs - choose between send and read
       if (value === "menu") {
