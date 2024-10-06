@@ -22,11 +22,13 @@ function display(text) {
   console.log(text);
 }
 
-function resetMenu() {
+function resetMenu(showDisplay = true) {
   mode = "menu";
-  display(
-    "\nWelcome to Notion Mail!\nPlease select an option:\n- send: Send mail to a user.\n- read: Check a user's mail.\n"
-  );
+  if (showDisplay) {
+    display(
+      "\nWelcome to Notion Mail!\nPlease select an option:\n- send: Send mail to a user.\n- read: Check a user's mail.\n"
+    );
+  }
   rl.prompt();
 }
 
@@ -107,7 +109,7 @@ async function fetchMessagesForUser(recipient) {
           "this sender had little to say";
         display(`${index + 1}:\nfrom: ${sender}\n${message}\n`);
       });
-      resetMenu();
+      resetMenu(false);
     }
   } catch (error) {
     display(`Error fetching messages: ${error.message}`);
@@ -117,7 +119,9 @@ async function fetchMessagesForUser(recipient) {
 function processInput(value) {
   switch (mode) {
     case "menu": // need to prompt user for inputs - choose between send and read
-      if (value === "send") {
+      if (value === "menu") {
+        resetMenu();
+      } else if (value === "send") {
         mode = "send_sender"; // next input will be sender for send mode
         display(`Sender: $`);
       } else if (value === "read") {
@@ -125,7 +129,7 @@ function processInput(value) {
         display(`User: $`);
       } else {
         display(
-          `Sorry, we don't recognize that, please type either send or read`
+          `Sorry, we don't recognize that, please type either 'send' or 'read'`
         );
       }
       rl.prompt();
@@ -150,6 +154,7 @@ function processInput(value) {
       createNotionPage(sender, recipient, message); // also save it on notion db
       display(`Message sent from ${sender} to ${recipient}!\n`);
       resetMenu();
+      rl.prompt();
       break;
 
     case "read_user":
