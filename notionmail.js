@@ -23,6 +23,14 @@ function display(text) {
   console.log(text);
 }
 
+function resetMenu() {
+  mode = "menu";
+  display(
+    "\nWelcome to Notion Mail!\nPlease select an option:\n- send: Send mail to a user.\n- read: Check a user's mail.\n"
+  );
+  rl.prompt();
+}
+
 // create new page (row) with given sender, recipient, message
 async function createNotionPage(sender, recipient, message) {
   const dbID = process.env.NOTION_DB_ID;
@@ -70,12 +78,41 @@ async function createNotionPage(sender, recipient, message) {
   }
 }
 
-function resetMenu() {
-  mode = "menu";
-  display(
-    "\nWelcome to Notion Mail!\nPlease select an option:\n- send: Send mail to a user.\n- read: Check a user's mail.\n"
-  );
-  rl.prompt();
+// query messages from notion db for a specific recipient
+async function fetchMessagesForUser(recipient) {
+  const dbID = process.env.NOTION_DB_ID;
+
+  try {
+    const queryResponse = await notion.databases.query({
+      database_id: dbID,
+      filter: {
+        property: "Recipient",
+        rich_text: {
+          equals: recipient,
+        },
+      },
+    });
+
+    const results = queryResponse.results;
+
+    if (results.length === 0) {
+      display(`No mail found for ${recipient}`);
+    } else {
+      display(`You've got (${results.length}) messages!`);
+      results.forEach((result, index) => {
+        const sender =
+          result.properties.Sender.rich_text[0]?.text.content ||
+          "mysterious sender";
+        const message =
+          result.properties.Message.title[0]?.text.content ||
+          "this sender had little to say";
+        display(`${index + 1}:\nfrom: ${sender}\n${message}\n`);
+      });
+      resetMenu();
+    }
+  } catch (error) {
+    display(`Error fetching messages: ${error.message}`);
+  }
 }
 
 function processInput(value) {
@@ -124,16 +161,8 @@ function processInput(value) {
       break;
 
     case "read_user":
-      if (users[value]) {
-        const userMessages = users[value];
-        display(`Messages (${userMessages.length}):`);
-        userMessages.forEach((msg, index) => {
-          display(`${index + 1}:\nfrom: ${msg.from}\n${msg.message}\n`);
-        });
-      } else {
-        display(`No mail for user: ${value}`);
-      }
-      resetMenu();
+      recipient = value;
+      fetchMessagesForUser(recipient); // fetch mail from notion db for recipient
       break;
   }
 }
