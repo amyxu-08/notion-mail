@@ -16,6 +16,7 @@ let mode = "menu"; // of three possibilites (menu, sending, reading)
 let sender = ""; // in send mode: sender
 let recipient = ""; // in send mode: recipient
 let message = ""; // in send mode: message
+let messages = []; // used to more index for deletions (prevent refetching)
 
 // to display, console.log the text
 function display(text) {
@@ -26,7 +27,7 @@ function resetMenu(showDisplay = true) {
   mode = "menu";
   if (showDisplay) {
     display(
-      "\nWelcome to Notion Mail!\nPlease select an option:\n- send: Send mail to a user.\n- read: Check a user's mail.\n"
+      "\nWelcome to Space Mail!\nPlease select an option:\n- send: Send mail to a user.\n- read: Check a user's mail.\n"
     );
   }
   rl.prompt();
@@ -83,12 +84,13 @@ async function createNotionPage(sender, recipient, message) {
             },
           ],
         },
+        Deleted: {
+          checkbox: false, // default to not deleted
+        },
       },
     });
-
-    // display("\nmessage sent on notion!\n");
   } catch (error) {
-    display(`failed to save message on notion because ${error.message}\n`);
+    display(`Failed to save message to Notion db because ${error.message}\n`);
   }
 }
 
@@ -100,20 +102,31 @@ async function fetchMessagesForUser(recipient) {
     const queryResponse = await notion.databases.query({
       database_id: dbID,
       filter: {
-        property: "Recipient",
-        rich_text: {
-          equals: recipient,
-        },
+        and: [
+          {
+            property: "Recipient",
+            rich_text: {
+              equals: recipient,
+            },
+          },
+          {
+            property: "Deleted",
+            checkbox: {
+              equals: false, // don't fetch messages if they are marked as deleted
+            },
+          },
+        ],
       },
     });
 
-    const results = queryResponse.results;
+    messages = queryResponse.results;
 
-    if (results.length === 0) {
+    if (messages.length === 0) {
       display(`No mail found for ${recipient}`);
+      resetMenu(false);
     } else {
-      display(`You've got (${results.length}) messages!`);
-      results.forEach((result, index) => {
+      display(`You've got (${messages.length}) messages!`);
+      messages.forEach((result, index) => {
         const sender =
           result.properties.Sender.rich_text[0]?.text.content ||
           "mysterious sender";
@@ -126,10 +139,39 @@ async function fetchMessagesForUser(recipient) {
           `${index + 1}:\nfrom: ${sender}\n${message}\nsent at ${timestamp}\n`
         );
       });
-      resetMenu(false);
+      display(
+        '\nEnter the message index to delete or type "skip" to keep them all.'
+      );
+      rl.prompt();
     }
   } catch (error) {
     display(`Error fetching messages: ${error.message}`);
+  }
+}
+
+// delete messages by marking them as deleted
+async function markMessageAsDeleted(index) {
+  if (index < 1 || index > messages.length) {
+    display("Invalid index. No message marked as deleted.");
+    return;
+  }
+
+  const messageId = messages[index - 1].id;
+
+  try {
+    await notion.pages.update({
+      page_id: messageId,
+      properties: {
+        Deleted: {
+          checkbox: true, // mark the message as deleted
+        },
+      },
+    });
+
+    display(`Success! Message ${index} marked as deleted.\n`);
+    resetMenu(false);
+  } catch (error) {
+    display(`Failed to mark message ${error.message} as deleted.\n`);
   }
 }
 
@@ -177,6 +219,21 @@ function processInput(value) {
     case "read_user":
       recipient = value;
       fetchMessagesForUser(recipient); // fetch mail from notion db for recipient
+      mode = "delete_message"; // from read, allow users to delete messages
+      break;
+
+    case "delete_message":
+      if (value === "skip") {
+        display("No messages marked as deleted.\n");
+        resetMenu();
+      } else {
+        const index = parseInt(value, 10); // parse string to int
+        if (!isNaN(index)) {
+          markMessageAsDeleted(index);
+        } else {
+          display('Invalid input. Please enter a number or "skip".');
+        }
+      }
       break;
   }
 }
