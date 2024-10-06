@@ -27,6 +27,10 @@
 2. **Install Dependencies**:
    ```bash
    npm install @notionhq/client dotenv
+3. **Configure Environment Variables**:
+   ```plaintext
+   NOTION_KEY=<Your Notion API Key>
+   NOTION_DB_ID=<Your Notion Database ID>
 3. **Run SpaceMail**:
    ```bash
    node spacemail.js
