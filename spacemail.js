@@ -140,7 +140,7 @@ async function fetchMessagesForUser(recipient) {
         );
       });
       display(
-        '\nEnter the message index to delete or type "skip" to keep them all.'
+        "\nEnter the message index to delete one message or type 'delete all' to delete all messages in your inbox.\nType 'skip' to skip deleting any messages."
       );
       rl.prompt();
     }
@@ -172,6 +172,27 @@ async function markMessageAsDeleted(index) {
     resetMenu(false);
   } catch (error) {
     display(`Failed to mark message ${error.message} as deleted.\n`);
+  }
+}
+
+// delete all messages via multiple delete update calls
+async function markAllMessagesAsDeleted() {
+  try {
+    for (let message of messages) {
+      await notion.pages.update({
+        page_id: message.id,
+        properties: {
+          Deleted: {
+            checkbox: true, // mark as deleted
+          },
+        },
+      });
+    }
+
+    display("Success! All messages have been marked as deleted.\n");
+    resetMenu(false);
+  } catch (error) {
+    display(`Failed to delete all messages: ${error.message}\n`);
   }
 }
 
@@ -226,6 +247,8 @@ function processInput(value) {
       if (value === "skip") {
         display("No messages marked as deleted.\n");
         resetMenu();
+      } else if (value === "delete all") {
+        markAllMessagesAsDeleted();
       } else {
         const index = parseInt(value, 10); // parse string to int
         if (!isNaN(index)) {
