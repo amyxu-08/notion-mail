@@ -32,10 +32,23 @@ function resetMenu(showDisplay = true) {
   rl.prompt();
 }
 
+// format the timestamp (ex. 2024-10-06T06:14:00.000Z => October 6, 2024 at 6:14 AM)
+function formatTimestamp(timestamp) {
+  const date = new Date(timestamp);
+  const options = {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+  };
+  return new Intl.DateTimeFormat("en-US", options).format(date);
+}
+
 // create new page (row) with given sender, recipient, message
 async function createNotionPage(sender, recipient, message) {
   const dbID = process.env.NOTION_DB_ID;
-
   try {
     const newPage = await notion.pages.create({
       parent: {
@@ -107,7 +120,11 @@ async function fetchMessagesForUser(recipient) {
         const message =
           result.properties.Message.title[0]?.text.content ||
           "this sender had little to say";
-        display(`${index + 1}:\nfrom: ${sender}\n${message}\n`);
+        const timestamp =
+          formatTimestamp(result.created_time) || "some time...";
+        display(
+          `${index + 1}:\nfrom: ${sender}\n${message}\nsent at ${timestamp}\n`
+        );
       });
       resetMenu(false);
     }
