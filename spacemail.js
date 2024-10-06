@@ -12,7 +12,7 @@ const rl = readline.createInterface({
   prompt: "$ ",
 });
 
-let mode = "menu"; // of three possibilites (menu, sending, reading)
+let mode = "menu";
 let sender = ""; // in send mode: sender
 let recipient = ""; // in send mode: recipient
 let message = ""; // in send mode: message
