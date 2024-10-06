@@ -1,3 +1,9 @@
+require("dotenv").config();
+
+// initialize notion client with auth
+const { Client } = require("@notionhq/client");
+const notion = new Client({ auth: process.env.NOTION_KEY });
+
 const readline = require("readline");
 
 const rl = readline.createInterface({
@@ -15,6 +21,53 @@ let message = ""; // in send mode: message
 // to display, console.log the text
 function display(text) {
   console.log(text);
+}
+
+// create new page (row) with given sender, recipient, message
+async function createNotionPage(sender, recipient, message) {
+  const dbID = process.env.NOTION_DB_ID;
+
+  try {
+    const newPage = await notion.pages.create({
+      parent: {
+        type: "database_id",
+        database_id: dbID,
+      },
+      properties: {
+        Message: {
+          title: [
+            {
+              text: {
+                content: message,
+              },
+            },
+          ],
+        },
+        Sender: {
+          rich_text: [
+            {
+              text: {
+                content: sender,
+              },
+            },
+          ],
+        },
+        Recipient: {
+          rich_text: [
+            {
+              text: {
+                content: recipient,
+              },
+            },
+          ],
+        },
+      },
+    });
+
+    // display("\nmessage sent on notion!\n");
+  } catch (error) {
+    display(`failed to save message on notion because ${error.message}\n`);
+  }
 }
 
 function resetMenu() {
@@ -63,6 +116,9 @@ function processInput(value) {
         users[recipient] = [];
       }
       users[recipient].push({ from: sender, message });
+
+      createNotionPage(sender, recipient, message); // also save it on notion db
+
       display(`Message sent from ${sender} to ${recipient}!\n`);
       resetMenu();
       break;
