@@ -1,5 +1,9 @@
 ## Space Mail ([visit here](https://amyxu-08.notion.site/You-ve-got-mail-1154595328b0808daf45cdf53eb994e7))
 
+
+https://github.com/user-attachments/assets/fad03fc4-8e5f-448c-bd1f-e605b22c70d0
+
+
 ### Description
 
 **Space Mail** is a command-line interface application that enables users to send, read, and delete messages via a Notion database. This program provides an engaging way to send virtual mail between users, with messages stored and managed through the Notion API. Key features include:
