@@ -6,7 +6,7 @@ https://github.com/user-attachments/assets/fad03fc4-8e5f-448c-bd1f-e605b22c70d0
 
 ### Description
 
-**Space Mail** is a command-line interface application that enables users to send, read, and delete messages via a Notion database. This program provides an engaging way to send virtual mail between users, with messages stored and managed through the Notion API. Key features include:
+**Space Mail** is a command-line interface application that enables users to send, read, and delete messages via a Notion database. This program provides an engaging way to send space mail between users, with messages stored and managed through the Notion API. Key features include:
 
 - **Send Mail**: Users can enter a sender, recipient, and message, which will then be saved to a Notion database as a new entry.
 - **Read Mail**: Users can check for any mail sent to a specific recipient. If messages are found, the sender, message content, and timestamp are displayed.
